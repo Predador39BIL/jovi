@@ -53,6 +53,49 @@
   function qs(sel, ctx) { return (ctx || document).querySelector(sel); }
   function qsa(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); }
 
+  // ---------- blocos de UI repetidos entre telas (nav inferior, cabeçalhos, busca) ----------
+  // Gerados aqui em vez de duplicados no HTML, para não repetir o mesmo SVG/markup em várias telas.
+  const ICONS = {
+    back: '<svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    cameraGrid: '<svg viewBox="0 0 24 24" fill="none"><rect x="7" y="7" width="10" height="10" rx="1.5" stroke="white" stroke-width="1.6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
+  };
+
+  const NAV_ITEMS = [
+    { key: 'camera', label: 'Câmera', icon: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 7l1.5-2.5h5L16 7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13.5" r="3.3" stroke="currentColor" stroke-width="1.6"/></svg>' },
+    { key: 'search', label: 'Buscar', icon: ICONS.search },
+    { key: 'gallery', label: 'Sugestões IA', fab: true, icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" fill="currentColor"/></svg>' },
+    { key: 'favoritos', label: 'Favoritos', icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.4-9.5-9A5 5 0 0112 5a5 5 0 019.5 6c-2.5 4.6-9.5 9-9.5 9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' },
+    { key: 'albuns', label: 'Álbuns', icon: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 15l4.5-4.5L12 15l3-3 6 6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' }
+  ];
+
+  function renderBottomNav(active) {
+    return NAV_ITEMS.map((item) => `
+      <button class="nav-item${item.fab ? ' nav-fab' : ''}${item.key === active ? ' active' : ''}" data-nav="${item.key}">
+        ${item.icon}
+        <span>${item.label}</span>
+      </button>`).join('');
+  }
+
+  function renderSimpleHeader(backBtnId) {
+    return `
+      <button class="icon-btn-ghost" id="${backBtnId}">${ICONS.back}</button>
+      <h2>Galeria <span>Inteligente</span></h2>
+      <span style="width:38px"></span>`;
+  }
+
+  function sparkleIcon(gradId) {
+    return `<svg class="sparkle" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" fill="url(#${gradId})"/><defs><linearGradient id="${gradId}" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#ec4899"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs></svg>`;
+  }
+  function renderSearchBar(inputId, placeholder, gradId) {
+    return `${ICONS.search}<input type="text" id="${inputId}" placeholder="${placeholder}" autocomplete="off" />${sparkleIcon(gradId)}`;
+  }
+
+  qsa('[data-icon]').forEach((el) => { el.innerHTML = ICONS[el.dataset.icon]; });
+  qsa('.bottom-nav[data-active-nav]').forEach((nav) => { nav.innerHTML = renderBottomNav(nav.dataset.activeNav); });
+  qsa('[data-simple-header]').forEach((el) => { el.innerHTML = renderSimpleHeader(el.dataset.simpleHeader); });
+  qsa('[data-input-id]').forEach((el) => { el.innerHTML = renderSearchBar(el.dataset.inputId, el.dataset.placeholder, el.dataset.grad); });
+
   // ---------- toast ----------
   let toastTimer = null;
   function showToast(msg) {
